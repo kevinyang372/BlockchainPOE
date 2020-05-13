@@ -39,13 +39,8 @@ class Block {
         let self = this;
         return new Promise((resolve, reject) => {
             let recordedHash = self.hash;
-            let currentHash = SHA256(JSON.stringify({
-                hash: null,
-                height: self.height,
-                body: self.body,
-                time: self.time,
-                previousBlockHash: self.previousBlockHash
-            })).toString();
+            self.hash = null;
+            let currentHash = SHA256(JSON.stringify(self)).toString();
             resolve(recordedHash == currentHash);
         });
     }
@@ -60,8 +55,13 @@ class Block {
      *     or Reject with an error.
      */
     getBData() {
-        if(this.height == 0){return;}
-        return JSON.parse(hex2ascii(this.body));
+        return new Promise((resolve, reject) => {
+            if(this.height == 0){
+                reject("Gensis Block");
+            } else {
+                resolve(JSON.parse(hex2ascii(this.body)));
+            }
+        })
     }
 
 }

@@ -66,7 +66,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             self.height += 1;
             block.height = self.height;
-            block.time = new Date().getTime().toString().slice(0,-3);
+            block.time = new Date().getTime().toString();
 
             if(self.height > 0){
                 block.previousBlockHash = self.chain[self.chain.length - 1].hash;
@@ -74,6 +74,8 @@ class Blockchain {
 
             block.hash = SHA256(JSON.stringify(block)).toString();
             self.chain.push(block);
+
+            this.height += 1; // increment height
             resolve("Block added");
         });
     }
@@ -88,7 +90,7 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
+            resolve(`${address}:${new Date().getTime().toString()}:starRegistry`);
         });
     }
 
@@ -113,16 +115,17 @@ class Blockchain {
         let self = this;
         return new Promise(async (resolve, reject) => {
             let recordedTime = parseInt(message.split(':')[1]);
-            let currentTime = parseInt(new Date().getTime().toString().slice(0,-3));
+            let currentTime = parseInt(new Date().getTime().toString());
 
-            if(currentTime - recordedTime < 5 * 60 && bitcoinMessage.verify(message, address, signature)){
-                let block = new BlockClass.Block({data: message + star});
+            if(currentTime - recordedTime > 5 * 60000){
+                reject("Message expired");
+            } else if(!bitcoinMessage.verify(message, address, signature)){
+                reject("No block added");
+            } else {
+                let block = new BlockClass.Block({data: star});
                 await _addBlock(block);
                 resolve("Block Added");
-            } else {
-                reject('Message expired');
             }
-
 
         });
     }
@@ -171,11 +174,11 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
-        return new Promise((resolve, reject) => {
-            self.chain.forEach((block) => {
-                let data = block.getBData();
-                if(data.split(':')[0] == address){
-                    stars.push(data.split('starRegistry')[1]);
+        return new Promise(async (resolve, reject) => {
+            self.chain.forEach(async (block) => {
+                let data = await block.getBData();
+                if(data.owner == address){
+                    stars.push(data);
                 }
             });
             resolve(stars);
