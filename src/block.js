@@ -39,8 +39,14 @@ class Block {
         let self = this;
         return new Promise((resolve, reject) => {
             let recordedHash = self.hash;
-            let currentHash = SHA256(JSON.stringify(self)).toString();
-            return recordedHash == currentHash
+            let currentHash = SHA256(JSON.stringify({
+                hash: null,
+                height: self.height,
+                body: self.body,
+                time: self.time,
+                previousBlockHash: self.previousBlockHash
+            })).toString();
+            resolve(recordedHash == currentHash);
         });
     }
 
