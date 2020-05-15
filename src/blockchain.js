@@ -75,7 +75,6 @@ class Blockchain {
             block.hash = SHA256(JSON.stringify(block)).toString();
             self.chain.push(block);
 
-            this.height += 1; // increment height
             resolve("Block added");
         });
     }
@@ -122,8 +121,8 @@ class Blockchain {
             } else if(!bitcoinMessage.verify(message, address, signature)){
                 reject("No block added");
             } else {
-                let block = new BlockClass.Block({data: star});
-                await _addBlock(block);
+                let block = new BlockClass.Block({owner: address, data: star});
+                await self._addBlock(block);
                 resolve("Block Added");
             }
 

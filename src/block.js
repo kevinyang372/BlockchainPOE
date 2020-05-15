@@ -41,6 +41,7 @@ class Block {
             let recordedHash = self.hash;
             self.hash = null;
             let currentHash = SHA256(JSON.stringify(self)).toString();
+            self.hash = recordedHash;
             resolve(recordedHash == currentHash);
         });
     }
